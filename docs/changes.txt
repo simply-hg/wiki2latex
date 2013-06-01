@@ -1,0 +1,47 @@
+== 13 (released 2013-02-13)==
+* Fixed not escaping circumflex character
+* Fixed a php notice
+* Fixed linking to a media page of Mediawiki
+* Fixed an error regarding user settings
+* Hopefully reduced memory usage
+* Fixed an incompatibility with MW 1.18
+* Choosing a template which is only a redirect page resulted in an error. Now redirects are not shown any more.
+* Added support for Behavior switches (on page __DIRECTIVES__). 
+* Added a mathjax-contrib-file (experimental atm)
+* Added some new Magic Words
+* (Hopefully) Fixed some bugs in table code 
+* Added new hooks
+* Added a way to optionally remove indentation of tables
+
+==Aegaeon: 2011-02-22==
+* Added div and span transformation. Works with CSS classes. Style attributes are not recognized. See spandiv.txt in doc folder for more information.
+* Added user setting for Mathpazo (Accessible via "Wiki2LaTeX"-Tab in your Mediawiki-Settings)
+* Added a user setting to enable microtype by default
+* Added a user setting for your preferred babel language
+* Added a user setting for debug mode
+* Moved (show log file) in W2L-HTML form to a user setting
+* Added a user setting to show parsed LaTeX-code on W2L result page
+* Fixed some inconsistencies on various result pages
+* Added a new debug message system to parser. Use it by calling: PARSER->debugMessage('Caller', 'your message'). This makes debugging W2L and its extensions easier. Messages are only displayed in debug mode.
+* Added disableCache method to parser. Doesn't do anything, but is required for a more general extension support
+* Fixed a bug, which caused some extra verbatim environments under certain circumstances.
+* Avoid empty verbatim environments
+* New versioning scheme: Each W2L version is now called after a Saturn moon and its release date.
+
+==v.0.11==
+* Removed ((WikiContent)) in LaTeX-Templates. Replace it with: ((W2L_CONTENT))
+* Removed support for old config-arrays $w2l_config and others. This only affects very old installations. Change them in your config files as such:
+** $w2l_config     to $w2lConfig;
+** $w2l_tags       to $w2lTags;
+** $w2l_pFunctions to $w2lParserFunctions;
+* Removed reference-support from w2lDefaultConfig.php. Reactivate it by adding include('contrib/ref.php'); to your own w2lConfig.php
+* Changed export options from radio buttons to clickable buttons. Removed $w2lConfig['default_action'] which is useless now.
+* Fixed an imageparsing bug
+* Fixed a bug, which accidentally triggered table parsing where no table is.
+* Added indented <math> support: ":<math>..." now becomes "\begin{equation}..." (thx to cjiahao)
+* Added German Translation
+* Added Polish translation (thx to: Szymon Tarnowski)
+* Added $frame to tag-definitions (which is submitted by MW 1.16). Has no meaning at this point in W2L. This change (should not but) might break any tag extension. In case of errors please check, if the function definition matches the one given in the docs.
+* W2L now parses plain links in an article.
+* Added an empty template. You can use this if the page contains a complete LaTeX-document
+* LaTeX compile now repeats as often as you specify in $w2lConfig['ltx_repeat']. Previously it missed the last run.

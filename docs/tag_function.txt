@@ -1,0 +1,39 @@
+/*
+Here you can see an example tag extension to MediaWiki markup.
+
+*/
+
+if (!function_exists(example_w2l_tag) {
+	
+	$wgHooks['w2lInitParser']         = "registerExampleToW2L";
+	$wgHooks['ParserFirstCallInit'][] = "registerExampleToMediawiki";
+
+	function registerExampleToW2L(&$parser) {
+		global $w2lTags;
+		$w2lTags['example'] = "example_w2l_tag";
+		return true;
+	}
+
+	// If you're adding compatibility to an existing Mediawiki-extension
+	// You can skip this function...
+	function registerExampleToMediawiki(&$parser) {
+		$parser->setHook("example", "example_w2l_tag");
+		return true;
+	}
+
+
+
+	function example_w2l_tag($input, $argv, $parser, $frame = false, $mode = 'wiki') {
+		switch($mode) {
+			case 'latex':
+				return 'This is an example output seen in \LaTeX.';
+			break;
+			case 'wiki':
+				return 'This is an exampleoutput as seen when parsed by Mediawiki.';
+			break;
+			default:
+				return 'Well, this should never happen.';
+			break;
+		}  
+	}
+}
