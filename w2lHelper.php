@@ -15,57 +15,44 @@
 
 if ( !defined('MEDIAWIKI') ) {
 	$msg  = 'To install Wiki2LaTeX, put the following line in LocalSettings.php:<br/>';
-	$msg .= '<tt>require_once( $IP."/extensions/path_to_Wiki2LaTeX_files/wiki2latex.php" );</tt>';
+	$msg .= '<tt>wfLoadExtension( "wiki2latex" );</tt>';
 	echo $msg;
 	exit( 1 );
 }
 
-$w2lLanguages = array(
-	'Dutch'=>'dutch',
-	'English' => 'english',
-	'French' => 'french',
-	'German' => 'german',
-	'German (new)' => 'ngerman',
-	'Hungarian'=>'hungarian',
-	'Russian'=>'russian',
-	'Ukranian'=>'ukrainian',
-);
+require_once('w2lDefaultConfig.php');
+
+
+if (!function_exists('wfLoadExtensionMessages')) {
+	function wfLoadExtensionMessages($dontcare) { return; }
+}
 
 class Wiki2LaTeXHelper {
-		
-	function __construct() {
-		global $w2lConfig;
+	static $messagesLoaded = false;
+	static $actions = array('w2llatexform', 'w2ltexfiles', 'w2lpdf', 'w2ltextarea', 'w2lcleartempfolder');
+	static $w2lLanguages = array(
+		'Dutch'=>'dutch',
+		'English' => 'english',
+		'French' => 'french',
+		'German' => 'german',
+		'German (new)' => 'ngerman',
+		'Hungarian'=>'hungarian',
+		'Russian'=>'russian',
+		'Ukranian'=>'ukrainian',
+	);
 
-		$this->version     = W2L_VERSION;
-		$this->required_mw = '1.11';
-		
-		$this->messagesLoaded = false;
-		$this->config  =& $w2lConfig;
-		$this->actions = array('w2llatexform', 'w2ltexfiles', 'w2lpdf', 'w2ltextarea', 'w2lcleartempfolder');
-		
+	function __construct() {
 		return true;       
 	}
 
-	function Setup() {
-		global $wgExtensionCredits, $w2lConfig, $wgUser;
+	static function Setup() {
+		global $wgUser;
 
-		// A current MW-Version is required so check for it...
-		wfUseMW($this->required_mw);
-		
-		
 		// Check if messages are loaded. If not do so.
-		if ( $this->messagesLoaded == false ) {
+		if ( self::$messagesLoaded == false  ) {
 			wfLoadExtensionMessages( 'wiki2latex' );
-			$this->messagesLoaded = true;
+			self::$messagesLoaded = true;
 		}
-
-		$wgExtensionCredits['other'][] = array(
-			'name'        => wfMsg('wiki2latex'),
-			'author'      => 'Hans-Georg Kluge and [http://code.google.com/p/wiki2latex/wiki/HallOfFame many contributors]',
-			'description' => wfMsg('w2l_description'),
-			'url'         => 'http://www.mediawiki.org/wiki/Extension:Wiki2LaTeX',
-			'version'     => $this->version
-		);
 
 		if ( $wgUser->getOption('w2lDebug') == true ) {
 			error_reporting(E_ALL);
@@ -74,7 +61,7 @@ class Wiki2LaTeXHelper {
 
 	}
 
-	function onBeforePageDisplay(&$out) {
+	static function onBeforePageDisplay(&$out) {
 		$script = <<<EOF
 <style type="text/css">/*<![CDATA[*/
 li#ca-latex {margin-left:1.6em;}
@@ -91,84 +78,56 @@ EOF;
 
 	}
 
-	public function onSkinTemplateContentActions(&$content_actions) {
-		// Here comes the small Wiki2LaTeX-Tab
+	static public function onSkinTemplateNavigation(&$sktemplate, &$links) {
+
 		global $wgUser;
-		global $wgTitle;
+		$title = $sktemplate->getSkin()->getTitle();
 
-		if ($this->messagesLoaded == false ) {
+		if (self::$messagesLoaded == false ) {
 			wfLoadExtensionMessages( 'wiki2latex' );
-			$this->messagesLoaded = true;
+			self::$messagesLoaded = true;
 		}
 		$values = new webRequest();
 		$action = $values->getVal('action');
 
-		$current_ns       = $wgTitle->getNamespace();
+		//$current_ns       = $wgTitle->getNamespace();
+		$current_ns       = $title->getNamespace();
 		$disallow_actions = array('edit', 'submit'); // disallowed actions
 
-		if ( ($wgUser->getID() == 0) AND ($this->config['allow_anonymous'] == false) ) {
+		if ( ($wgUser->getID() == 0) AND (Wiki2LaTeXConfig::$w2lConfig['allow_anonymous'] == false) ) {
 			return true;
 		}
 
-		if ( ( in_array($current_ns, $this->config['allowed_ns']) ) and !in_array($action, $disallow_actions)) {
-			$content_actions['latex'] = array(
-				'class' => ( in_array($action, $this->actions )  ) ? 'selected' : false,
-				'text' => wfMsg('w2l_tab'),
-				'href' => $wgTitle->getLocalUrl( 'action=w2llatexform' )
-			);
-		}
-
-		return true;
-	}
-	
-	public function onSkinTemplateNavigation(&$sktemplate, &$links) {
-
-		global $wgUser, $wgTitle;
-
-		if ($this->messagesLoaded == false ) {
-			wfLoadExtensionMessages( 'wiki2latex' );
-			$this->messagesLoaded = true;
-		}
-		$values = new webRequest();
-		$action = $values->getVal('action');
-
-		$current_ns       = $wgTitle->getNamespace();
-		$disallow_actions = array('edit', 'submit'); // disallowed actions
-
-		if ( ($wgUser->getID() == 0) AND ($this->config['allow_anonymous'] == false) ) {
-			return true;
-		}
-
-		if ( ( in_array($current_ns, $this->config['allowed_ns']) ) and !in_array($action, $disallow_actions)) {
+		if ( ( in_array($current_ns, Wiki2LaTeXConfig::$w2lConfig['allowed_ns']) ) and !in_array($action, $disallow_actions)) {
 			$links['views']['wiki2latex'] = array(
-				'class' => ( in_array($action, $this->actions )  ) ? 'selected' : false,
-				'text' => wfMsg('w2l_tab'),
-				'href' => $wgTitle->getLocalUrl( 'action=w2llatexform' )
+				'class' => ( in_array($action, self::$actions )  ) ? 'selected' : false,
+				'text' => wfMessage('w2l_tab')->text(),
+				'href' => $title->getLocalUrl( 'action=w2llatexform' )
 			);
 		}
 
 		return true;
 	}
 
-	public function onUnknownAction($action, $article) {
+	static public function onUnknownAction($action, $article) {
 		global $wgUser;
 		// Check the requested action
 		// return if not for w2l
 		//return true;
 
 		$action = strtolower($action);
-		if ( !in_array($action, $this->actions) ) {
+		if ( !in_array($action, self::$actions) ) {
 			// Not our action, so return!
 			return true;
 		}
 
 		// Check, if anonymous usage is allowed...
-		if ( ($wgUser->getID() == 0) AND ($this->config['allow_anonymous'] == false) ) {
+		if ( ($wgUser->getID() == 0) AND (Wiki2LaTeXConfig::$w2lConfig['allow_anonymous'] == false) ) {
 			return true;
 		}
 		
-		if ( !$this->messagesLoaded ) {
-			$this->onLoadAllMessages();
+		if ( !self::$messagesLoaded ) {
+			onLoadAllMessages();
 		}
 
 		// we are on our own now!
@@ -180,8 +139,7 @@ EOF;
 	}
 	
 
-	function onGetPreferences ( $user, &$preferences ) {
-		global $w2lLanguages;
+	static function onGetPreferences ( $user, &$preferences ) {
 		wfLoadExtensionMessages( 'wiki2latex' );
 		$preferences['w2lShowLog'] = array(
 			'class' => 'HTMLCheckField',
@@ -202,7 +160,7 @@ EOF;
 			'class' => 'HTMLSelectField',
 			'label-message' => 'w2l_babel', // a system message
 			'section' => 'wiki2latex',
-			'options' => $w2lLanguages,
+			'options' => self::$w2lLanguages,
 			//
 		);
 		return true;
@@ -210,3 +168,52 @@ EOF;
 
 }
 
+class w2ltextareaAction extends Action {
+	public function getName() {
+		return "w2ltextarea";
+	}
+
+	public function show() {
+		return Wiki2LaTeXHelper::onUnknownAction("w2ltextarea", $this->page);
+	}
+}
+
+class w2llatexformAction extends Action {
+	public function getName() {
+		return "w2llatexform";
+	}
+
+	public function show() {
+		return Wiki2LaTeXHelper::onUnknownAction("w2llatexform", $this->page);
+	}
+}
+
+class w2ltexfilesAction extends Action {
+	public function getName() {
+		return "w2ltexfiles";
+	}
+
+	public function show() {
+		return Wiki2LaTeXHelper::onUnknownAction("w2ltexfiles", $this->page);
+	}
+}
+
+class w2lpdfAction extends Action {
+	public function getName() {
+		return "w2lpdf";
+	}
+
+	public function show() {
+		return Wiki2LaTeXHelper::onUnknownAction("w2lpdf", $this->page);
+	}
+}
+
+class w2lcleartempfolderAction extends Action {
+	public function getName() {
+		return "w2lcleartempfolder";
+	}
+
+	public function show() {
+		return Wiki2LaTeXHelper::onUnknownAction("w2lcleartempfolder", $this->page);
+	}
+}

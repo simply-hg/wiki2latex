@@ -9,7 +9,7 @@
  
  if ( !defined('MEDIAWIKI') ) {
 	$msg  = 'To install Wiki2LaTeX, put the following line in LocalSettings.php:<br/>';
-	$msg .= '<tt>require_once( $IP."/extensions/path_to_Wiki2LaTeX_files/wiki2latex.php" );</tt>';
+	$msg .= '<tt>wfLoadExtension( "wiki2latex" );</tt>';
 	echo $msg;
 	exit( 1 );
 }
@@ -17,20 +17,20 @@
 $wgHooks['w2lInternalLinks'][]  = 'w2lLinkifyInternalLinks';
 $wgHooks['w2lInterwikiLinks'][] = 'w2lLinkifyInterwikiLinks';
 
-function w2lLinkifyInternalLinks(&$parser, &$link, &$linktext, &$linked_page) {
+function w2lLinkifyInternalLinks($parser, &$link, &$linktext, &$linked_page) {
 	$hr_options = '';
 	wfRunHooks('w2lNeedHyperref', array(&$parser, &$hr_options) );
 	$parser->addPackageDependency('hyperref', $hr_options);
 
 	$target = Title::newFromText($linked_page);
-	$target_url = $target->escapeFullURL();
+	$target_url = htmlspecialchars ($target->getFullURL() );
 	
 	$link = $parser->maskURL($target_url, $linktext);
 	
 	return true;
 }
 
-function w2lLinkifyInterwikiLinks(&$parser, &$url, &$linktext, &$command) {
+function w2lLinkifyInterwikiLinks($parser, &$url, &$linktext, &$command) {
 	$hr_options = '';
 	wfRunHooks('w2lNeedHyperref', array(&$parser, &$hr_options) );
 	$parser->addPackageDependency('hyperref', $hr_options);

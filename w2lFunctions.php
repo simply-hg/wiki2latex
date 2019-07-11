@@ -31,6 +31,8 @@ if ( defined('W2L_SENDFILE') ) {
     }
 }
 
+class Wiki2LaTeXFunctions {
+
 /**
  * Tries to get the system directory for temporary files. The TMPDIR, TMP, and
  * TEMP environment variables are then checked in sequence, and if none are set
@@ -45,7 +47,7 @@ if ( defined('W2L_SENDFILE') ) {
  *
  * @return String
  */
-function w2lTempDir() {
+static function w2lTempDir() {
     foreach( array( 'TMPDIR', 'TMP', 'TEMP' ) as $var ) {
         $tmp = getenv( $var );
         if( $tmp && file_exists( $tmp ) && is_dir( $tmp ) && is_writable( $tmp ) ) {
@@ -59,8 +61,8 @@ function w2lTempDir() {
     return wfIsWindows() ? 'C:\Windows\Temp' : '/tmp';
 }
 
-if ( !function_exists('w2lWebsafeTitle') ) {
-	function w2lWebsafeTitle($title) {
+//if ( !function_exists('w2lWebsafeTitle') ) {
+	static function w2lWebsafeTitle($title) {
 		$file_saver = array(
 			"/", "&", "%", "$", ",", ";", ":", "!", "?","*", "#", "'", '"', "´", "`", "+", "\\", " "
 		);
@@ -68,21 +70,23 @@ if ( !function_exists('w2lWebsafeTitle') ) {
 		$title = substr($title, 0, 100);
 		return $title;
 	}
-}
+//}
 
 
 
-if ( !function_exists('w2lExampleFilter') ) {
-	function w2lExampleFilter(&$parser, $content, $tag, $classes) {
+//if ( !function_exists('w2lExampleFilter') ) {
+	static function w2lExampleFilter(&$parser, $content, $tag, $classes) {
 		// This function should return the LaTeX-Code, that this class should be
 		// transformed to.
 		return strtoupper($content);
 	}
-}
+//}
 
-function w2lExampleCallback(&$parser, $content, $tag, $classes, $full_block) {
+static function w2lExampleCallback(&$parser, $content, $tag, $classes, $full_block) {
 	// This function should return the LaTeX-Code, that this class should be
 	// transformed to.
 	return strtoupper($content);
+
+}
 
 }

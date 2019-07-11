@@ -9,14 +9,14 @@
  
  if ( !defined('MEDIAWIKI') ) {
 	$msg  = 'To install Wiki2LaTeX, put the following line in LocalSettings.php:<br/>';
-	$msg .= '<tt>require_once( $IP."/extensions/path_to_Wiki2LaTeX_files/wiki2latex.php" );</tt>';
+	$msg .= '<tt>wfLoadExtension( "wiki2latex" );</tt>';
 	echo $msg;
 	exit( 1 );
 }
  
 if ( !function_exists('w2lMath') ) {
 
-	$w2lTags['math'] = 'w2lMath';
+	Wiki2LaTeXTags::$w2lTags['math'] = 'w2lMath';
 	$wgHooks['w2lBeginParse'][] = 'w2lDoDisplayMath';
 
 	function w2lMath($input, $argv, $parser, $frame = false, $mode = 'latex') {
@@ -34,7 +34,7 @@ if ( !function_exists('w2lMath') ) {
 
 	}
 
-	function w2lDoDisplayMath(&$parser, &$text) {
+	function w2lDoDisplayMath($parser, &$text) {
 		$text = str_replace(":<math>", "<math style=\"display\">", $text);
 		return true;
 	}

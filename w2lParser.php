@@ -15,7 +15,7 @@
 
 if ( !defined('MEDIAWIKI') ) {
 	$msg  = 'To install Wiki2LaTeX, put the following line in LocalSettings.php:<br/>';
-	$msg .= '<tt>require_once( $IP."/extensions/path_to_Wiki2LaTeX_files/wiki2latex.php" );</tt>';
+	$msg .= '<tt>wfLoadExtension( "wiki2latex" );</tt>';
 	echo $msg;
 	exit( 1 );
 }
@@ -34,7 +34,7 @@ define('W2L_VARIABLE', 5);
 
 class Wiki2LaTeXParser {
 	function __construct() {
-		$this->version = W2L_VERSION;
+		$this->version = Wiki2LaTeXCore::$version;
 		
 		$this->initiated = false;
 		$this->doProfiling = false;
@@ -115,17 +115,17 @@ class Wiki2LaTeXParser {
 		$text = trim($text);
 		$text = "\n".$text."\n";
 
-		wfRunHooks('w2lBeginParse', array( &$this, &$text ) );
+		Hooks::run('w2lBeginParse', array( &$this, &$text ) );
 
-		wfRunHooks('w2lBeforeCut', array( &$this, &$text ) );
+		Hooks::run('w2lBeforeCut', array( &$this, &$text ) );
 		$text = $this->preprocessString($text);
 
 
 		// First, strip out all comments...
-		wfRunHooks('w2lBeforeStrip', array( &$this, &$text ) );
+		Hooks::run('w2lBeforeStrip', array( &$this, &$text ) );
 		$text = $this->stripComments($text);
 		
-		wfRunHooks('w2lBeforeExpansion', array( &$this, &$text ) );
+		Hooks::run('w2lBeforeExpansion', array( &$this, &$text ) );
 
 		switch ( $this->getVal('process_curly_braces') ) {
 			case '0': // remove everything between curly braces
@@ -141,12 +141,12 @@ class Wiki2LaTeXParser {
 		}
 		//$this->reportError($text, __METHOD__);
 		$text = $this->getPerPageDirectives($text);
-		wfRunHooks("w2lBeforeExtractTags", array( &$this, &$text ) );
+		Hooks::run("w2lBeforeExtractTags", array( &$this, &$text ) );
 		$text = $this->extractParserExtensions($text);
 		$text = $this->extractPre($text);
 
 		
-		wfRunHooks("w2lBeforeInternalParse", array( &$this, &$text ) );
+		Hooks::run("w2lBeforeInternalParse", array( &$this, &$text ) );
 		
 		$text = $this->internalParse($text);
 
@@ -163,7 +163,7 @@ class Wiki2LaTeXParser {
 		//$text = $this->replacePre($text);
 		$text = trim($text);
 		$text = str_replace("\n\n\n", "\n\n", $text);
-		wfRunHooks("w2lFinish", array( &$this, &$text ) );
+		Hooks::run("w2lFinish", array( &$this, &$text ) );
 
 		$time_end = microtime(true);
 		$this->parse_time = $time_end - $time_start;
@@ -181,12 +181,12 @@ class Wiki2LaTeXParser {
 		$str = $this->doInternalLinks($str);
 		$str = $this->doExternalLinks($str);
 		
-		wfRunHooks('w2lBeforeMask', array( &$this, &$str ) );
+		Hooks::run('w2lBeforeMask', array( &$this, &$str ) );
 		$str = $this->maskLatexCommandChars($str);
 		// Now we can begin parsing. We parse as close as possible the way mediawiki parses a string.
 		// So, start with tables
 		
-		wfRunHooks('w2lBeforeTables', array( &$this, &$str ) );
+		Hooks::run('w2lBeforeTables', array( &$this, &$str ) );
 		$str = $this->doTableStuff($str);
 
 		// Next come these Blocklevel elments
@@ -212,7 +212,7 @@ class Wiki2LaTeXParser {
 		$str = $this->doSimpleReplace($str);
 
 
-		wfRunHooks('w2lInternalFinish', array( &$this, &$str ) );
+		Hooks::run('w2lInternalFinish', array( &$this, &$str ) );
 
 		$this->profileOut(__METHOD__);
 		return $str;
@@ -396,27 +396,24 @@ class Wiki2LaTeXParser {
 	public function initParsing() {
 		$fName = __METHOD__;
 		$this->profileIn($fName);
-		global $w2lTags;
-		global $w2lParserFunctions;
-		global $w2lConfig;
 
 		if ($this->initiated == true ) {
 			return;
 		}
 		
-		wfRunHooks('w2lInitParser', array(&$this));
+		Hooks::run('w2lInitParser', array(&$this));
 		
 		$this->unique = $this->uniqueString();
 		
-		foreach($w2lTags as $key => $value) {
+		foreach(Wiki2LaTeXTags::$w2lTags as $key => $value) {
 			$this->addTagCallback($key, $value);
 		}
 
-		foreach($w2lParserFunctions as $key => $value) {
+		foreach(Wiki2LaTeXConfig::$w2lParserFunctions as $key => $value) {
 			$this->addParserFunction($key, $value);
 		}
 
-		foreach($w2lConfig as $key => $value) {
+		foreach(Wiki2LaTeXConfig::$w2lConfig as $key => $value) {
 			$this->setVal($key, $value);
 		}
 
@@ -459,7 +456,7 @@ class Wiki2LaTeXParser {
 		include('w2lChars.php');
 		include('w2lQuotes.php');
 		
-		wfRunHooks('w2lInitParserFinish', array(&$this));
+		Hooks::run('w2lInitParserFinish', array(&$this));
 
 		$this->initiated = true;
 		$this->profileOut($fName);
@@ -618,7 +615,7 @@ class Wiki2LaTeXParser {
 
 		//$this->reportError(strlen($str), __METHOD__);
 
-		wfRunHooks('w2lPreProcess', array( &$this, &$str ) );
+		Hooks::run('w2lPreProcess', array( &$this, &$str ) );
 		//$this->reportError(strlen($str), __METHOD__);
 		return $str;
 	}
@@ -708,7 +705,7 @@ class Wiki2LaTeXParser {
 				$lastPrefix = $pref2;
 			}
 			if( 0 == $prefixLength ) {
-				wfProfileIn( "$fname-paragraph" );
+				//wfProfileIn( "$fname-paragraph" );
 				# No prefix (not in list)--go to paragraph mode
 				// XXX: use a stack for nestable elements like span, table and div
 
@@ -761,7 +758,7 @@ class Wiki2LaTeXParser {
 	/* private */ function openList( $char ) {
 		$list_ul_env = 'itemize';
 		$list_ol_env = 'enumerate';	 
-		wfRunHooks('w2lParseLists', array(&$this, &$list_ul_env, &$list_ol_env) );
+		Hooks::run('w2lParseLists', array(&$this, &$list_ul_env, &$list_ol_env) );
 	   
 		$result = $this->closeParagraph();
 
@@ -779,7 +776,7 @@ class Wiki2LaTeXParser {
 	/* private */ function closeList( $char ) {
 		$list_ul_env = 'itemize';
 		$list_ol_env = 'enumerate';	 
-		wfRunHooks('w2lParseLists', array(&$this, &$list_ul_env, &$list_ol_env) );
+		Hooks::run('w2lParseLists', array(&$this, &$list_ul_env, &$list_ol_env) );
 
 		if ( '*' == $char ) { $text = '\end{'.$list_ul_env.'}'; }
 		else if ( '#' == $char ) { $text = '\end{'.$list_ol_env.'}'; }
@@ -820,7 +817,7 @@ class Wiki2LaTeXParser {
 		$pos = strpos( $str, ':' );
 		if( $pos === false ) {
 			// Nothing to find!
-			wfProfileOut( $fname );
+			//wfProfileOut( $fname );
 			return false;
 		}
 
@@ -869,7 +866,7 @@ class Wiki2LaTeXParser {
 		}
 
 		// Beware: using chapter removes support for \subparagraph
-		$headings_latex = $headings_latex = array('part', 'chapter', 'section',  'subsection',  'subsubsection', 'paragraph', 'subparagraph');
+		$headings_latex = $headings_latex = array( /* 'part', */ 'chapter', 'section',  'subsection',  'subsubsection', 'paragraph', 'subparagraph');
 		
 		$asteriks = $this->getMark('Asteriks');
 		$this->sc['asteriks'] = $asteriks;
@@ -877,7 +874,7 @@ class Wiki2LaTeXParser {
 
 		$heading_command = '';
 
-		wfRunHooks( 'w2lHeadings', array(&$this, &$heading, &$level, &$heading_command) );
+		Hooks::run( 'w2lHeadings', array(&$this, &$heading, &$level, &$heading_command) );
 
 		if ( substr($heading, 0, 1) == '*' ) {
 			// *
@@ -927,7 +924,7 @@ class Wiki2LaTeXParser {
 		if ( true == $title->isExternal() ) {
 			// Interwiki-Link
 
-			$link_url = $title->escapeFullURL(); // This one contains some HTML code which is bad
+			$link_url = htmlspecialchars ($title->getFullURL() ); // This one contains some HTML code which is bad
 			// Get the first occurrence of ", and remove everything else
 
 			$remove_from = strpos('"', $link_url );
@@ -936,11 +933,12 @@ class Wiki2LaTeXParser {
 			}
 			$command     = $link_text;
 
-			wfRunHooks('w2lInterwikiLinks', array(&$this, &$link_url, &$link_text, &$command) );
+			Hooks::run('w2lInterwikiLinks', array(&$this, &$link_url, &$link_text, &$command) );
 			
 			return $command;
 		}
 		
+		$link = $link_int;
 		switch ( $title->getNamespace() ) {
 			case NS_MEDIA:
 				// this is just a link to the mediawiki-page
@@ -986,7 +984,7 @@ class Wiki2LaTeXParser {
 				//%%$title = $file->getTitle()->getText();
 				$graphic_package = 'graphicx';
 				$graphic_command = "\\begin{center} \\resizebox{".$imgwidth."}{!}{\includegraphics{{$imagepath}}}\\\\ \\textit{{$caption}}\end{center}\n";
-				wfRunHooks('w2lImage', array(&$this, &$file, &$graphic_package, &$graphic_command, &$imagepath, &$imagename, &$imgwith, &$caption));
+				Hooks::run('w2lImage', array(&$this, &$file, &$graphic_package, &$graphic_command, &$imagepath, &$imagename, &$imgwith, &$caption));
 			
 				$this->addPackageDependency($graphic_package);
 				$masked_command = $this->getMark($graphic_package);
@@ -997,14 +995,14 @@ class Wiki2LaTeXParser {
 			case NS_CATEGORY:
 				// Namespace is a category, but a plain link to a cat-page is also matched here...
 				if ( $link_int{0} != ':' ) {
-					wfRunHooks('w2lAddCategory', array(&$this, &$link_int) );
+					Hooks::run('w2lAddCategory', array(&$this, &$link_int) );
 					return '';
 				} // else: Fall through
 			default:
 				$link_url  = $title->getFullUrl();
 				$link_page = $title->getDBKey();
 				$command   = $link_text;
-				wfRunHooks('w2lInternalLinks', array(&$this, &$command, &$link_text, &$link_page, &$link_url) );
+				Hooks::run('w2lInternalLinks', array(&$this, &$command, &$link_text, &$link_page, &$link_url) );
 				return $command;
 			break;
 		}
@@ -1118,7 +1116,7 @@ class Wiki2LaTeXParser {
 		}
 		
 		$hr_options = 'pdfborder={0 0 0}, breaklinks=true, pdftex=true, raiselinks=true';
-		wfRunHooks('w2lNeedHyperref', array(&$this, &$hr_options) );
+		Hooks::run('w2lNeedHyperref', array(&$this, &$hr_options) );
 		
 		$this->addPackageDependency('hyperref', $hr_options);
 		//$this->addPackageDependency('breakurl');
@@ -1437,7 +1435,7 @@ class Wiki2LaTeXParser {
 			$correct = array("\n\{|" => "\n{|", "|\}\n"=> "|}\n");
 			$str = str_replace(array_keys($correct), array_values($correct), $str);
 		
-			wfRunHooks("w2lTables", array( &$this, &$str ) );
+			Hooks::run("w2lTables", array( &$this, &$str ) );
 
 			$str = $this->externalTableHelper($str);
 		//}
@@ -1457,10 +1455,10 @@ class Wiki2LaTeXParser {
 			return $text;
 		}
 
-		wfProfileIn( __METHOD__ );
+		//wfProfileIn( __METHOD__ );
 		# TODO: good candidate for FSS
 		$text = strtr( $text, $state['general'] );
-		wfProfileOut( __METHOD__ );
+		//wfProfileOut( __METHOD__ );
 		return $text;
 	}
 
@@ -1474,10 +1472,10 @@ class Wiki2LaTeXParser {
 			return $text;
 		}
 
-		wfProfileIn( __METHOD__ );
+		//wfProfileIn( __METHOD__ );
 		# TODO: good candidate for FSS
 		$text = strtr( $text, $state['nowiki'] );
-		wfProfileOut( __METHOD__ );
+		//wfProfileOut( __METHOD__ );
 
 		return $text;
 	}
@@ -1612,11 +1610,11 @@ class Wiki2LaTeXParser {
                     // This table is not nested
                     $this->debugMessage('Table: inserted latexfmt: ', $latexformat);
                     $this->debugMessage('Table: inserted latexwidth ', $latexwidth);
-                    wfRunHooks("w2lTableLaTeXAttributes", array(&$this, &$latexformat, &$latexwidth));
+                    Hooks::run("w2lTableLaTeXAttributes", array(&$this, &$latexformat, &$latexwidth));
                     $table_head = "\begin{tabularx}{{$latexwidth}}{{$latexformat}}\\hline";
                     $table_foot = "\\end{tabularx}\n".trim($ltx_caption);
-                    wfRunHooks("w2lTableHead", array(&$this, &$table_head));
-                    wfRunHooks("w2lTableFoot", array(&$this, &$table_foot));
+                    Hooks::run("w2lTableHead", array(&$this, &$table_head));
+                    Hooks::run("w2lTableFoot", array(&$this, &$table_foot));
 					$t[$thk] = $table_head;
 					$t[$k] = $table_foot;
                     unset($table_head, $table_foot);
@@ -1848,7 +1846,7 @@ class Wiki2LaTeXParser {
 			'<code>'        => '\begin{verbatim}',
 			'</code>'       => '\end{verbatim}',
 		);
-		wfRunHooks('w2lHTMLReplace', array(&$this, &$replacing, &$str));
+		Hooks::run('w2lHTMLReplace', array(&$this, &$replacing, &$str));
 		$str = str_ireplace(array_keys($replacing), array_values($replacing), $str);
 		
 		$this->profileOut($fName);
@@ -2405,7 +2403,7 @@ class Wiki2LaTeXParser {
 
 	public function getErrorMessages() {
 		if ( $this->is_error == true) {
-			$errors  = wfMsg('w2l_parser_protocol')."\n";
+			$errors  = wfMessage('w2l_parser_protocol')->text()."\n";
 			$errors .= '<pre style="overflow:auto;">';
 			foreach ($this->error_msg as $error_line) {
 				$errors .= $error_line;

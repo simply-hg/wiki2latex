@@ -15,7 +15,7 @@
 
 if ( !defined('MEDIAWIKI') ) {
 	$msg  = 'To install Wiki2LaTeX, put the following line in LocalSettings.php:<br/>';
-	$msg .= '<tt>require_once( $IP."/extensions/path_to_Wiki2LaTeX_files/wiki2latex.php" );</tt>';
+	$msg .= '<tt>wfLoadExtension( "wiki2latex" );</tt>';
 	echo $msg;
 	exit( 1 );
 }
@@ -23,12 +23,11 @@ if ( !defined('MEDIAWIKI') ) {
 class Wiki2LaTeXCompiler {
 
 	function __construct($piece, $mkdir = true) {
-		global $w2lConfig;
 		$this->files   = array();
-		$this->command = $w2lConfig['ltx_command'];
-		$this->sort    = $w2lConfig['ltx_sort'];
-		$this->bibtex  = $w2lConfig['ltx_bibtex'];
-		$this->repeat  = $w2lConfig['ltx_repeat'];
+		$this->command = Wiki2LaTeXConfig::$w2lConfig['ltx_command'];
+		$this->sort    = Wiki2LaTeXConfig::$w2lConfig['ltx_sort'];
+		$this->bibtex  = Wiki2LaTeXConfig::$w2lConfig['ltx_bibtex'];
+		$this->repeat  = Wiki2LaTeXConfig::$w2lConfig['ltx_repeat'];
 
 		$this->piece   = $piece;
 		$this->path    = '';
@@ -51,7 +50,7 @@ class Wiki2LaTeXCompiler {
 		$this->is_admin = in_array('sysop', $wgUser->getGroups());
 		
 		$msg = '';
-		$tempdir  = w2lTempDir();
+		$tempdir  = Wiki2LaTeXFunctions::w2lTempDir();
 		
 		if ( $this->debug == true && $this->is_admin == true) {
 			$msg .= "System temp dir: ".$tempdir."\n";
@@ -73,7 +72,7 @@ class Wiki2LaTeXCompiler {
 		if ( true == $this->mkdir ) {
 			if ( !@mkdir($this->path) ) {
 				wfVarDump($this->path);
-				$wgOut->addHTML( wfMsg('w2l_temp_dir_missing') );
+				$wgOut->addHTML( wfMessage('w2l_temp_dir_missing')->text() );
 				$this->msg = $msg;
 				return false;
             }
@@ -81,7 +80,7 @@ class Wiki2LaTeXCompiler {
             $chmod = chmod($this->path, 0777);
             
 			if ( !file_exists($this->path) OR !is_dir($this->path) OR !is_writable($this->path) ) {
-				$wgOut->addHTML( wfMsg('w2l_temp_dir_missing') );
+				$wgOut->addHTML( wfMessage('w2l_temp_dir_missing')->text() );
 				$this->msg = $msg;
 				return false;
 			}
@@ -126,20 +125,20 @@ class Wiki2LaTeXCompiler {
 		
 		if ( $this->debug == true && $this->is_admin == true) {
 			$msg .= "\n== Debug Information ==\n";
-			$msg .= wfMsg('w2l_compile_command', $command )."\n";
-			$msg .= wfMsg('w2l_temppath', $this->path )."\n";
+			$msg .= wfMessage('w2l_compile_command', $command )->text()."\n";
+			$msg .= wfMessage('w2l_temppath', $this->path )->text()."\n";
 			$msg .= "Current directory: ".getcwd()."\n";
 			$msg .= "User: ".wfShellExec("whoami")."\n";
 			$msg .= "== PDF-LaTeX Information ==\n".wfShellExec("pdflatex -version");
 		}
 		
 		while ( (true == $go ) OR ( $i > 5 ) ) {
-			$msg .= "\n".wfMsg('w2l_compile_run', $i)."\n";
+			$msg .= "\n".wfMessage('w2l_compile_run', $i)->text()."\n";
 
 			$msg .= wfShellExec($command);
 
 			if ( !file_exists( $file.'.pdf' ) ) {
-				$msg .= wfMsg('w2l_pdf_not_created', $file.'.pdf')."\n";
+				$msg .= wfMessage('w2l_pdf_not_created', $file.'.pdf')->text()."\n";
 				$msg .= "Current directory: ".getcwd()."\n";
 				$msg .= "Is it writable? ".wfBoolToStr(is_writable(getcwd()))."\n";
 				$msg .= "Is it a font-problem maybe? ".wfShellExec('kpsewhich -var-value TFMFONTS')."\n";
@@ -148,7 +147,6 @@ class Wiki2LaTeXCompiler {
 				$go = false;
 			} else {
 				$compile_error = false;
-				/*
 				if ( true == $sort ) {
 					// sort it, baby
 					$msg .= '===Sort-Result==='."\n";
@@ -162,7 +160,6 @@ class Wiki2LaTeXCompiler {
 					$msg .= $this->doBibTex($file);
 					$msg .= "\n";
 				}
-				*/
 				
 				if ( $this->repeat == $i ) {
 					$go = false;
@@ -193,7 +190,7 @@ class Wiki2LaTeXCompiler {
 		$timer_end = microtime(true);
 		$this->timer = $timer_end - $timer_start;
 		$this->timer = round($this->timer, 3);
-		$msg .= "Running time LaTeX: ".$timer." seconds";
+		$msg .= "Running time LaTeX: ".$this->timer." seconds";
 		$this->msg = $msg;
 		return $compile_error;
 	}

@@ -9,7 +9,7 @@
  
  if ( !defined('MEDIAWIKI') ) {
 	$msg  = 'To install Wiki2LaTeX, put the following line in LocalSettings.php:<br/>';
-	$msg .= '<tt>require_once( $IP."/extensions/path_to_Wiki2LaTeX_files/wiki2latex.php" );</tt>';
+	$msg .= '<tt>wfLoadExtension( "wiki2latex" );</tt>';
 	echo $msg;
 	exit( 1 );
 }
@@ -35,7 +35,7 @@ function w2lParalistEnv(&$parser, &$ul, &$ol) {
 
 function w2lParalistForm( &$core, &$output ) { 
 	$output .= '<label><input type="checkbox" name="use_paralist" value="true" /> ';
-	$output .= wfMsg('w2l_select_paralist').'</label><br />'."\n";
+	$output .= wfMessage('w2l_select_paralist')->text().'</label><br />'."\n";
 	return true;
 }
 

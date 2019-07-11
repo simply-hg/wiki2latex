@@ -17,7 +17,7 @@
 
 if ( !defined('MEDIAWIKI') ) {
 	$msg  = 'To install Wiki2LaTeX, put the following line in LocalSettings.php:<br/>';
-	$msg .= '<tt>require_once( $IP."/extensions/path_to_Wiki2LaTeX_files/wiki2latex.php" );</tt>';
+	$msg .= '<tt>wfLoadExtension( "wiki2latex" );</tt>';
 	echo $msg;
 	exit( 1 );
 }
@@ -54,24 +54,24 @@ include('contrib/linkify.php');           // Internal Links are created
 
 
 // These four possibilities show how to use div and span support:
-/* $w2lConfig['div']['w2l-mycommand'] = array (
+/* Wiki2LaTeXConfig::$w2lConfig['div']['w2l-mycommand'] = array (
 	'before' => '\mycommand{',
 	'after'  => '}',
 	'filter' => 'w2lMycommandFilter' // this php function gets the whole content of the tag
 );*/
 
 /*
-$w2lConfig['div']['w2l-remove'] = array (
+Wiki2LaTeXConfig::$w2lConfig['div']['w2l-remove'] = array (
 	'callback' => 'w2lRemove' // this callback function is called by preg_replace_callback
 );*/
 
 // Using an empty string removes the div or span box completely:
-/*$w2lConfig['div']['w2l-remove'] = array (
+/*Wiki2LaTeXConfig::$w2lConfig['div']['w2l-remove'] = array (
 	'string' => '', // You can use %content% as a placeholder for the content of the tag
 	'filter' => '' // optionally: filter %content%
 );*/
 
-/*$w2lConfig['div']['w2l-speciallist'] = array (
+/*Wiki2LaTeXConfig::$w2lConfig['div']['w2l-speciallist'] = array (
 	'environment' => 'itemize', //this environment is created
 	'filter' => 'transformToList' // optionally: filter content, and create optional settings for environment
 );*/
