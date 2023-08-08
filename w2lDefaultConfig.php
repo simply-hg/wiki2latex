@@ -17,43 +17,54 @@
 
 if ( !defined('MEDIAWIKI') ) {
 	$msg  = 'To install Wiki2LaTeX, put the following line in LocalSettings.php:<br/>';
-	$msg .= '<tt>require_once( $IP."/extensions/path_to_Wiki2LaTeX_files/wiki2latex.php" );</tt>';
+	$msg .= '<tt>wfLoadExtension( "wiki2latex" );</tt>';
 	echo $msg;
 	exit( 1 );
 }
 
+class Wiki2LaTeXConfig {
+	static $w2lConfig = array();
+	static $w2lParserFunctions = array();
+}
+
 // Caution: pdfexport only works by using templates. These are described on the website.
 // PDF-Export is used on your own risk.
-$w2lConfig['pdfexport'] = true;
+Wiki2LaTeXConfig::$w2lConfig['pdfexport'] = true;
 
 // Which Namespaces should show the LaTeX-tab? Add them by their number and seperate them with commas.
-$w2lConfig['allowed_ns'] = array(NS_MAIN);
+Wiki2LaTeXConfig::$w2lConfig['allowed_ns'] = array(NS_MAIN);
 
 // Is an anonymous user allowed, to view the 'LaTeX-Tab'?
-$w2lConfig['allow_anonymous'] = false;
+Wiki2LaTeXConfig::$w2lConfig['allow_anonymous'] = false;
 
 // Adding some default extension-tags:
 include_once('contrib/math.php');
 include_once('contrib/pre.php');
 
 // Default Values used by form:
-$w2lConfig['default_template'] = 'auto';
+Wiki2LaTeXConfig::$w2lConfig['default_template'] = 'auto';
 
-$w2lConfig['docclass'] = 'article';
-$w2lConfig['process_curly_braces'] = '2';
+Wiki2LaTeXConfig::$w2lConfig['docclass'] = 'article';
+Wiki2LaTeXConfig::$w2lConfig['process_curly_braces'] = '2';
 
 // This command should work. Before your try to enable pdfexport, please try this
 // command on your local shell.
-$w2lConfig['ltx_command'] = 'pdflatex -interaction=batchmode %file%';
-$w2lConfig['ltx_sort']    = 'makeindex %file%'; // unused
-$w2lConfig['ltx_bibtex']  = 'bibtex %file%';    // unused
-$w2lConfig['ltx_repeat']  = 3;
+Wiki2LaTeXConfig::$w2lConfig['ltx_command'] = 'pdflatex -interaction=batchmode %file%';
+Wiki2LaTeXConfig::$w2lConfig['ltx_sort']    = 'makeindex %file%'; // unused
+Wiki2LaTeXConfig::$w2lConfig['ltx_bibtex']  = 'bibtex %file%';    // unused
+Wiki2LaTeXConfig::$w2lConfig['ltx_repeat']  = 3;
 
-$w2lConfig['auto_clear_tempfolder'] = false;
+Wiki2LaTeXConfig::$w2lConfig['auto_clear_tempfolder'] = false;
 
-$w2lConfig['magic_template'] = 'w2lMagicTemplate.php';
+Wiki2LaTeXConfig::$w2lConfig['magic_template'] = 'w2lMagicTemplate.php';
 
-$w2lConfig['div'] = array (  );
+Wiki2LaTeXConfig::$w2lConfig['div'] = array (  );
 
-$w2lConfig['span'] = array (  );
+Wiki2LaTeXConfig::$w2lConfig['span'] = array (  );
+
+Wiki2LaTeXConfig::$w2lConfig['w2lBabelDefault'] = 'english';
+
+if ( file_exists( dirname(__FILE__).'/w2lConfig.php') ) {
+        include_once('w2lConfig.php');
+}
 

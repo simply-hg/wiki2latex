@@ -9,10 +9,12 @@
  
  if ( !defined('MEDIAWIKI') ) {
 	$msg  = 'To install Wiki2LaTeX, put the following line in LocalSettings.php:<br/>';
-	$msg .= '<tt>require_once( $IP."/extensions/path_to_Wiki2LaTeX_files/wiki2latex.php" );</tt>';
+	$msg .= '<tt>wfLoadExtension( "wiki2latex" );</tt>';
 	echo $msg;
 	exit( 1 );
 }
+
+use MediaWiki\MediaWikiServices;
 
 /* Braucht:
 * Hook für Magic-Template
@@ -38,7 +40,7 @@
 
 if ( !defined('MEDIAWIKI') ) {
 	$msg  = 'To install Wiki2LaTeX, put the following line in LocalSettings.php:<br/>';
-	$msg .= '<tt>require_once( $IP."/extensions/path_to_Wiki2LaTeX_files/wiki2latex.php" );</tt>';
+	$msg .= '<tt>wfLoadExtension( "wiki2latex" );</tt>';
 	echo $msg;
 	exit( 1 );
 }
@@ -49,23 +51,22 @@ if ( !defined('MEDIAWIKI') )
 // Adds makeidx-support
 
 class w2lMakeidx {
-	function Setup() {
-		global $wgParser, $w2lTags;
+	static function Setup() {
 		// Register Extension-Tags to Mediawiki...
 		
 		// LaTeX-commands, which we want to offer to a wiki-article
-		$wgParser->setHook("index",      array($this, "Index"));
-		$wgParser->setHook("printindex", array($this, "PrintIndex"));
+		MediaWikiServices::getInstance()->getParser()->setHook("index",      "w2lMakeidx::Index");
+		MediaWikiServices::getInstance()->getParser()->setHook("printindex", "w2lMakeidx::PrintIndex");
 
 		// Some default ones
 		
 		// Some Extensions, which return LaTeX-commands
-		$w2lTags['index']      = array($this, 'Index');
-		$w2lTags['printindex'] = array($this, 'PrintIndex');
+		Wiki2LaTeXTags::$w2lTags['index']      = "w2lMakeidx::Index";
+		Wiki2LaTeXTags::$w2lTags['printindex'] = "w2lMakeidx::PrintIndex";
 
 	}
 
-	function Index($input, $argv, &$parser, $mode = 'wiki') {
+	static function Index($input, $argv, &$parser, $mode = 'wiki') {
 		switch ($mode) {
 			case 'wiki':
 				$output = $input."<sup>(i)</sup>";
@@ -83,8 +84,7 @@ class w2lMakeidx {
 		return $output;
 	}
 
-	function PrintIndex($input, $argv, &$parser, $mode = 'wiki') {
-
+	static function PrintIndex($input, $argv, $parser, $dontcare, $mode = 'wiki') {
 		switch ($mode) {
 			case 'wiki':  $output = "(INDEX)";
 			break;

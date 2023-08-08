@@ -9,7 +9,7 @@
  
  if ( !defined('MEDIAWIKI') ) {
 	$msg  = 'To install Wiki2LaTeX, put the following line in LocalSettings.php:<br/>';
-	$msg .= '<tt>require_once( $IP."/extensions/path_to_Wiki2LaTeX_files/wiki2latex.php" );</tt>';
+	$msg .= '<tt>wfLoadExtension( "wiki2latex" );</tt>';
 	echo $msg;
 	exit( 1 );
 }
@@ -34,8 +34,8 @@ function w2lMathpazoHook( &$parser, &$text) {
 }
 
 function w2lMathpazoForm( &$core, &$output ) {
-	global $wgUser;
-	if ( $wgUser->getOption('w2lMathPazoDefault') == true ) {
+	$_wgUser = RequestContext::getMain()->getUser();
+	if ( $_wgUser->getOption('w2lMathPazoDefault') == true ) {
 		$output .= '<label><input type="checkbox" name="use_mathpazo" value="true" checked="checked" /> ';
 	} else {
 		$output .= '<label><input type="checkbox" name="use_mathpazo" value="true" /> ';

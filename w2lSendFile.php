@@ -21,7 +21,8 @@ define('W2L_SENDFILE', 1);
 // Some Config-Hacks to allow for including some original Mediawiki-files:
 define('MEDIAWIKI', 1);
 
-require_once("../../includes/GlobalFunctions.php");
+if (file_exists("../../includes/GlobalFunctions.php"))
+	require_once("../../includes/GlobalFunctions.php");
 
 require_once("w2lFunctions.php");
 
@@ -29,9 +30,9 @@ $file  = addslashes( $_GET['fid'] );
 $fmt   = addslashes( $_GET['fmt'] );
 $title = addslashes( $_GET['title'] );
 
-$tmp = w2lTempDir();
+$tmp = Wiki2LaTeXFunctions::w2lTempDir();
 
-$title = w2lWebsafeTitle($title);
+$title = Wiki2LaTeXFunctions::w2lWebsafeTitle($title);
 
 $file_loc = $tmp.DIRECTORY_SEPARATOR.'w2ltmp-'.$file.DIRECTORY_SEPARATOR.'Main.'.$fmt;
 

@@ -19,7 +19,7 @@
 
  if ( !defined('MEDIAWIKI') ) {
 	$msg  = 'To install Wiki2LaTeX, put the following line in LocalSettings.php:<br/>';
-	$msg .= '<tt>require_once( $IP."/extensions/path_to_Wiki2LaTeX_files/wiki2latex.php" );</tt>';
+	$msg .= '<tt>wfLoadExtension( "wiki2latex" );</tt>';
 	echo $msg;
 	exit( 1 );
 }
@@ -28,7 +28,7 @@ $wgHooks['w2lMagicTemplateOptions'][] = 'w2lFrontForm';
 $wgHooks['w2lFinish'][]					= 'w2lFrontHook';
 $wgHooks['w2lRegisterOptions'][]		= 'w2lFront';
 
-function w2lFront(&$core) {
+function w2lFront($core) {
 	$core->addParserParameter('make_front');
 	$core->addParserParameter('front_title');
 	$core->addParserParameter('front_author');
@@ -36,7 +36,7 @@ function w2lFront(&$core) {
 	return true;
 }
 
-function w2lFrontHook( &$parser, &$text) {
+function w2lFrontHook( $parser, &$text) {
 
 	if ( $parser->getVal('make_front') ) {
 		$date	= $parser->getVal('front_date');
@@ -51,7 +51,7 @@ function w2lFrontHook( &$parser, &$text) {
 	return true;
 }
 
-function w2lFrontForm( &$core, &$output ) { 
+function w2lFrontForm( $core, &$output ) { 
 	$output .= '<style type="text/css">label.frontmatter { float: left; width: 120px; }</style>';
 	$output .= '<fieldset><legend>FrontMatter</legend>'."\n";
 

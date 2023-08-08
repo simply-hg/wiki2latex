@@ -1,0 +1,51 @@
+{
+	"name": "Wiki2LaTeX",
+	"version": "14",
+	"type": "parserhook",
+	"author": [
+		"Hans-Georg Kluge"
+	],
+	"description": "Converts an article to LaTeX and PDF",
+	"url": "http://www.mediawiki.org/wiki/Extension:Wiki2LaTeX",
+	"requires": {
+		"MediaWiki": ">= 1.29.0"
+	},
+	"Actions": {
+		"w2llatexform": "w2llatexformAction",
+		"w2ltextarea": "w2ltextareaAction",
+		"w2ltexfiles": "w2ltexfilesAction",
+		"w2lpdf": "w2lpdfAction",
+		"w2lcleartempfolder": "w2lcleartempfolderAction"
+	},
+	"ExtensionFunctions": [
+		"Wiki2LaTeXHelper::Setup"
+	],
+	"ExtensionMessagesFiles": {
+		"wiki2latex": "w2lMessages.php"
+	},
+	"AutoloadClasses": {
+		"Wiki2LaTeXFunctions": "w2lFunctions.php",
+		"Wiki2LaTeXConfig": "w2lDefaultConfig.php",
+		"Wiki2LaTeXTags": "w2lTags.php",
+		"Wiki2LaTeXHelper": "w2lHelper.php",
+		"Wiki2LaTeXParser": "w2lParser.php",
+		"Wiki2LaTeXCore": "w2lCore.php",
+		"Wiki2LaTeXCompiler": "w2lLaTeXCompiler.php"
+	},
+	"Hooks": {
+		"SkinTemplateNavigation": "Wiki2LaTeXHelper::onSkinTemplateNavigation",
+		"BeforePageDisplay": "Wiki2LaTeXHelper::onBeforePageDisplay",
+		"GetPreferences": "Wiki2LaTeXHelper::onGetPreferences",
+		"ParserFirstCallInit": "Wiki2LaTeXTags::Setup",
+		"w2lInitParser": "Wiki2LaTeXTags::w2lSetup"
+	},
+	"config": {
+		"ExtraNamespaces": {
+			"value": {
+				"400": "Wiki2LaTeX",
+				"401": "Wiki2LaTeX_talk"
+			}
+		}
+	},
+	"manifest_version": 2
+}

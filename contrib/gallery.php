@@ -9,14 +9,14 @@
  
  if ( !defined('MEDIAWIKI') ) {
 	$msg  = 'To install Wiki2LaTeX, put the following line in LocalSettings.php:<br/>';
-	$msg .= '<tt>require_once( $IP."/extensions/path_to_Wiki2LaTeX_files/wiki2latex.php" );</tt>';
+	$msg .= '<tt>wfLoadExtension( "wiki2latex" );</tt>';
 	echo $msg;
 	exit( 1 );
 }
  
 if ( !function_exists('w2lGallery') ) {
 
-	$w2lTags['source'] = 'w2lGallery';
+	Wiki2LaTeXTags::$w2lTags['source'] = 'w2lGallery';
 
 	function w2lGallery($input, $argv, $parser, $frame = false, $mode = 'latex') {
 

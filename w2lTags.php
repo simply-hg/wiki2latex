@@ -17,7 +17,7 @@
 
 if ( !defined('MEDIAWIKI') ) {
 	$msg  = 'To install Wiki2LaTeX, put the following line in LocalSettings.php:<br/>';
-	$msg .= '<tt>require_once( $IP."/extensions/path_to_Wiki2LaTeX_files/wiki2latex.php" );</tt>';
+	$msg .= '<tt>wfLoadExtension( "wiki2latex" );</tt>';
 	echo $msg;
 	exit( 1 );
 }
@@ -28,57 +28,55 @@ if ( !defined('MEDIAWIKI') )
 /* W2l-Parser-Extensions */
 
 class Wiki2LaTeXTags {
-	function Setup(&$parser) {
+	static $w2lTags = array();
+
+	static function Setup(&$parser) {
 		// Register Extension-Tags to Mediawiki...
 		
 		// LaTeX-commands, which we want to offer to a wiki-article
-		$parser->setHook("noindent",    array($this, "NoIndent"));
-		$parser->setHook("newpage",     array($this, "NewPage"));
-		$parser->setHook("label",       array($this, "Label"));
-		$parser->setHook("pageref",     array($this, "PageRef"));
-		$parser->setHook("chapref",     array($this, "ChapRef"));
+		$parser->setHook("noindent",    "Wiki2LaTeXTags::NoIndent");
+		$parser->setHook("newpage",     "Wiki2LaTeXTags::NewPage");
+		$parser->setHook("label",       "Wiki2LaTeXTags::Label");
+		$parser->setHook("pageref",     "Wiki2LaTeXTags::PageRef");
+		$parser->setHook("chapref",     "Wiki2LaTeXTags::ChapRef");
 		
 		// Extension-tags, which we need for w2l:
-		$parser->setHook("templatevar", array($this, "TemplateVar"));
-		$parser->setHook("latex",       array($this, "Latex"));
-		$parser->setHook("latexpage",   array($this, "LatexPage"));
-		$parser->setHook("latexfile",   array($this, "LatexFile"));
+		$parser->setHook("templatevar", "Wiki2LaTeXTags::TemplateVar");
+		$parser->setHook("latex",       "Wiki2LaTeXTags::Latex");
+		$parser->setHook("latexpage",   "Wiki2LaTeXTags::LatexPage");
+		$parser->setHook("latexfile",   "Wiki2LaTeXTags::LatexFile");
 		
 		// By this one, you can directly input latex to a wiki article. LaTeX code is not interpreted in wiki-mode, though.
-		$parser->setHook("rawtex",      array($this, "RawTex"));
+		$parser->setHook("rawtex",      "Wiki2LaTeXTags::RawTex");
 
 		return true;
 	}
 	
-	function w2lSetup(&$parser) {
-		global $w2lTags;
-		
-		$w2lTags['rawtex'] = array($this, 'rawtex');
+	static function w2lSetup($parser) {
+		Wiki2LaTeXTags::$w2lTags['rawtex'] = "Wiki2LaTeXTags::rawtex";
 		
 		// Some Extensions, which return LaTeX-commands
-		$w2lTags['newpage'] = array($this, 'NewPage');
-		$w2lTags['noindent'] = array($this, 'NoIndent');
-		$w2lTags['label']    = array($this, 'Label');
-		$w2lTags['pageref']  = array($this, 'PageRef');
-		$w2lTags['chapref']  = array($this, 'ChapRef');
+		Wiki2LaTeXTags::$w2lTags['newpage'] = "Wiki2LaTeXTags::NewPage";
+		Wiki2LaTeXTags::$w2lTags['noindent'] = "Wiki2LaTeXTags::NoIndent";
+		Wiki2LaTeXTags::$w2lTags['label']    = "Wiki2LaTeXTags::Label";
+		Wiki2LaTeXTags::$w2lTags['pageref']  = "Wiki2LaTeXTags::PageRef";
+		Wiki2LaTeXTags::$w2lTags['chapref']  = "Wiki2LaTeXTags::ChapRef";
 		
 		// These Tags should not return a value in LaTeX-Mode.
-		$w2lTags['templatevar'] = array($this, 'EmptyTag');
-		$w2lTags['latexpage']   = array($this, 'EmptyTag');
-		$w2lTags['latex']       = array($this, 'EmptyTag');
+		Wiki2LaTeXTags::$w2lTags['templatevar'] = "Wiki2LaTeXTags::EmptyTag";
+		Wiki2LaTeXTags::$w2lTags['latexpage']   = "Wiki2LaTeXTags::EmptyTag";
+		Wiki2LaTeXTags::$w2lTags['latex']       = "Wiki2LaTeXTags::EmptyTag";
 		
-        $w2lTags['script']       = array($this, 'EmptyTag');
-                
 		return true;
 	}
 
-	function Latex($input, $argv, $parser, $frame, $mode = 'wiki') {
+	static function Latex($input, $argv, $parser, $frame, $mode = 'wiki') {
 		$output = '<pre style="overflow:auto;">'.trim($input)."</pre>";
 
 		return $output;
 	}
 
-	function LatexPage($input, $argv, $parser, $frame, $mode = 'wiki') {
+	static function LatexPage($input, $argv, $parser, $frame, $mode = 'wiki') {
 
 		switch ($mode) {
 			case 'wiki':
@@ -94,20 +92,20 @@ class Wiki2LaTeXTags {
 		return $output;
 	}
 
-	function LatexFile($input, $argv, $parser, $frame, $mode = 'wiki') {
+	static function LatexFile($input, $argv, $parser, $frame, $mode = 'wiki') {
 		$output  = '<strong>Dateiname:</strong> '.$argv['name'].'.tex';
 		$output .= '<pre style="overflow:auto;">'.trim($input)."</pre>";
 
 		return $output;
 	}
 
-	function TemplateVar($input, $argv, $parser, $frame, $mode = 'wiki') {
+	static function TemplateVar($input, $argv, $parser, $frame, $mode = 'wiki') {
 		$output = "<p><strong>".$argv['vname']."</strong>: ".$input."</p>";
 		return $output;
 	}
 
 	// Latex-commands for Mediawiki
-	function NoIndent($input, $argv, $parser, $frame, $mode = 'wiki') {
+	static function NoIndent($input, $argv, $parser, $frame, $mode = 'wiki') {
 		switch($mode) {
 			case 'latex':
 				return '{\noindent}';
@@ -116,7 +114,7 @@ class Wiki2LaTeXTags {
 		}
 	}
 
-	function NewPage($input, $argv, $parser, $frame, $mode = 'wiki') {
+	static function NewPage($input, $argv, $parser, $frame, $mode = 'wiki') {
 		switch($mode) {
 			case 'latex':
 				return '\clearpage{}';
@@ -125,7 +123,7 @@ class Wiki2LaTeXTags {
 		}
 	}
 
-	function Label($input, $argv, $parser, $frame, $mode = 'wiki') {
+	static function Label($input, $argv, $parser, $frame, $mode = 'wiki') {
 		switch($mode) {
 			case 'latex':
 				$output = '\label{'.$input.'}';
@@ -137,7 +135,7 @@ class Wiki2LaTeXTags {
 		return $output;
 	}
 
-	function PageRef($input, $argv, $parser, $frame, $mode = 'wiki') {
+	static function PageRef($input, $argv, $parser, $frame, $mode = 'wiki') {
 		switch($mode) {
 			case 'latex':
 				$output = '\page{'.$input.'}';
@@ -149,7 +147,7 @@ class Wiki2LaTeXTags {
 		return $output;
 	}
 
-	function ChapRef($input, $argv, $parser, $frame, $mode = 'wiki') {
+	static function ChapRef($input, $argv, $parser, $frame, $mode = 'wiki') {
 		switch($mode) {
 			case 'latex':
 				$output = '\ref{'.$input.'}';
@@ -161,9 +159,7 @@ class Wiki2LaTeXTags {
 		return $output;
 	}
 
-	function rawtex($input, $argv, $parser, $frame, $mode = 'wiki') {
-		//global $w2l_config;
-
+	static function rawtex($input, $argv, $parser, $frame, $mode = 'wiki') {
 		switch ($mode) {
 			case 'latex': 
 				$output = $input;
