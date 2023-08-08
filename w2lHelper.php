@@ -20,6 +20,8 @@ if ( !defined('MEDIAWIKI') ) {
 	exit( 1 );
 }
 
+use MediaWiki\MediaWikiServices;
+
 require_once('w2lDefaultConfig.php');
 
 
@@ -28,8 +30,11 @@ if (!function_exists('wfLoadExtensionMessages')) {
 }
 
 class Wiki2LaTeXHelper {
+		
+	
 	static $messagesLoaded = false;
 	static $actions = array('w2llatexform', 'w2ltexfiles', 'w2lpdf', 'w2ltextarea', 'w2lcleartempfolder');
+	
 	static $w2lLanguages = array(
 		'Dutch'=>'dutch',
 		'English' => 'english',
@@ -46,7 +51,7 @@ class Wiki2LaTeXHelper {
 	}
 
 	static function Setup() {
-		global $wgUser;
+		$_wgUser = RequestContext::getMain()->getUser();
 
 		// Check if messages are loaded. If not do so.
 		if ( self::$messagesLoaded == false  ) {
@@ -54,7 +59,9 @@ class Wiki2LaTeXHelper {
 			self::$messagesLoaded = true;
 		}
 
-		if ( $wgUser->getOption('w2lDebug') == true ) {
+		$uol = MediaWikiServices::getInstance()->getUserOptionsLookup();
+		$opts = $uol->getOptions( $_wgUser );
+		if ( $opts['w2lDebug'] ??= false == true ) {
 			error_reporting(E_ALL);
 		}
 		return true;
@@ -80,7 +87,7 @@ EOF;
 
 	static public function onSkinTemplateNavigation(&$sktemplate, &$links) {
 
-		global $wgUser;
+		$_wgUser = RequestContext::getMain()->getUser();
 		$title = $sktemplate->getSkin()->getTitle();
 
 		if (self::$messagesLoaded == false ) {
@@ -94,7 +101,7 @@ EOF;
 		$current_ns       = $title->getNamespace();
 		$disallow_actions = array('edit', 'submit'); // disallowed actions
 
-		if ( ($wgUser->getID() == 0) AND (Wiki2LaTeXConfig::$w2lConfig['allow_anonymous'] == false) ) {
+		if ( ($_wgUser->getID() == 0) AND (Wiki2LaTeXConfig::$w2lConfig['allow_anonymous'] == false) ) {
 			return true;
 		}
 
@@ -110,7 +117,7 @@ EOF;
 	}
 
 	static public function onUnknownAction($action, $article) {
-		global $wgUser;
+		$_wgUser = RequestContext::getMain()->getUser();
 		// Check the requested action
 		// return if not for w2l
 		//return true;
@@ -122,7 +129,7 @@ EOF;
 		}
 
 		// Check, if anonymous usage is allowed...
-		if ( ($wgUser->getID() == 0) AND (Wiki2LaTeXConfig::$w2lConfig['allow_anonymous'] == false) ) {
+		if ( ($_wgUser->getID() == 0) AND (Wiki2LaTeXConfig::$w2lConfig['allow_anonymous'] == false) ) {
 			return true;
 		}
 		

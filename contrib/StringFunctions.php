@@ -14,6 +14,8 @@
 	exit( 1 );
 }
 
+use MediaWiki\MediaWikiServices;
+
 $w2lExtStringFunctions = new ExtStringFunctions ();
 
 Wiki2LaTeXConfig::$w2lParserFunctions['len']     = array(&$w2lExtStringFunctions, 'runLen' );
@@ -25,6 +27,6 @@ Wiki2LaTeXConfig::$w2lParserFunctions['replace'] = array(&$w2lExtStringFunctions
 Wiki2LaTeXConfig::$w2lParserFunctions['explode'] = array(&$w2lExtStringFunctions, 'runExplode');
 
 /* Leaving them out this time...
-    $wgParser->setFunctionHook('urlencode',array(&$wgExtStringFunctions,'runUrlEncode'));
-    $wgParser->setFunctionHook('urldecode',array(&$wgExtStringFunctions,'runUrlDecode'));
+    MediaWikiServices::getInstance()->getParser()->setFunctionHook('urlencode',array(&$wgExtStringFunctions,'runUrlEncode'));
+    MediaWikiServices::getInstance()->getParser()->setFunctionHook('urldecode',array(&$wgExtStringFunctions,'runUrlDecode'));
 */

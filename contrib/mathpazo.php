@@ -34,8 +34,8 @@ function w2lMathpazoHook( &$parser, &$text) {
 }
 
 function w2lMathpazoForm( &$core, &$output ) {
-	global $wgUser;
-	if ( $wgUser->getOption('w2lMathPazoDefault') == true ) {
+	$_wgUser = RequestContext::getMain()->getUser();
+	if ( $_wgUser->getOption('w2lMathPazoDefault') == true ) {
 		$output .= '<label><input type="checkbox" name="use_mathpazo" value="true" checked="checked" /> ';
 	} else {
 		$output .= '<label><input type="checkbox" name="use_mathpazo" value="true" /> ';

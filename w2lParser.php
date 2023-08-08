@@ -20,6 +20,8 @@ if ( !defined('MEDIAWIKI') ) {
 	exit( 1 );
 }
 
+use MediaWiki\MediaWikiServices;
+
 define('W2L_UNDEFINED', 'undefined');
 
 define('W2L_FILE', 1);
@@ -484,7 +486,7 @@ class Wiki2LaTeXParser {
 		if ( strlen($str) == 0 ) {
 			return '';
 		} else {
-			return $str{0};
+			return substr($str, 0, 1);
 		}
 	}
 
@@ -533,7 +535,7 @@ class Wiki2LaTeXParser {
 					if ( trim($preBlock[$block_counter]) == "" ) {
 						$work_line = $preBlock[$block_counter].$work_line;
 					} else {
-						$preBlockX = "\begin{verbatim}\n".$preBlock[$block_counter]."\end{verbatim}\n";
+						$preBlockX = "\begin{verbatim}\n".$preBlock[$block_counter]."\\end{verbatim}\n";
 					
 						//$work_line = $preBlock[$block_counter];
 						//
@@ -683,11 +685,11 @@ class Wiki2LaTeXParser {
 				$paragraphStack = false;
 
 				while( $commonPrefixLength < $lastPrefixLength ) {
-					$output .= $this->closeList( $lastPrefix{$lastPrefixLength-1} );
+					$output .= $this->closeList( substr($lastPrefix, $lastPrefixLength-1, 1) );
 					--$lastPrefixLength;
 				}
 				if ( $prefixLength <= $commonPrefixLength && $commonPrefixLength > 0 ) {
-					$output .= $this->nextItem( $pref{$commonPrefixLength-1} );
+					$output .= $this->nextItem( substr($pref, $commonPrefixLength-1, 1) );
 				}
 				while ( $prefixLength > $commonPrefixLength ) {
 					$char = substr( $pref, $commonPrefixLength, 1 );
@@ -719,7 +721,7 @@ class Wiki2LaTeXParser {
 			}
 		}
 		while ( $prefixLength ) {
-			$output .= $this->closeList( $pref2{$prefixLength-1} );
+			$output .= $this->closeList( substr($pref2, $prefixLength-1, 1) );
 			--$prefixLength;
 		}
 		if ( '' != $this->mLastSection ) {
@@ -797,7 +799,7 @@ class Wiki2LaTeXParser {
 		if ( $fl < $shorter ) { $shorter = $fl; }
 
 		for ( $i = 0; $i < $shorter; ++$i ) {
-			if ( $st1{$i} != $st2{$i} ) { break; }
+			if ( substr($st1, $i, 1) != substr($st2, $i, 1) ) { break; }
 		}
 		return $i;
 	}
@@ -950,9 +952,11 @@ class Wiki2LaTeXParser {
 				$parts = explode("|", $matches[1]);
 				$imagename = array_shift($parts);
 				$case_imagename = $imagename;
-				// still need to remove the Namespace:
-				$tmp_name = explode(':', $imagename, 2);
-				$imagename = $tmp_name[1];
+				if (strpos($imagename, ":") !== false) {
+					// still need to remove the Namespace:
+					$tmp_name = explode(':', $imagename, 2);
+					$imagename = $tmp_name[1];
+				}
 
 				$imgwidth = "10cm";
 				foreach ($parts as $part) {
@@ -969,11 +973,17 @@ class Wiki2LaTeXParser {
 					$caption = trim($part);
 				}
 				$title = Title::makeTitleSafe( NS_IMAGE, $imagename );
-				$this->repo = RepoGroup::singleton()->getLocalRepo();
+
+				/* XXX Why does Title::makeTitleSafe fail? */
+				if ($title == '')
+					$title = $imagename; 
+
+				$this->repo = MediaWikiServices::getInstance()->getRepoGroup()->getLocalRepo();
 				$file = LocalFile::newFromTitle( $title, $this->repo );
-				$file->loadFromFile();
+				$file->load();
 				if ( $file && $file->exists() ) {
 					$imagepath = $file->getPath();
+					$imagepath = str_replace("mwstore://local-backend/local-public/", $GLOBALS['wgUploadDirectory'], $imagepath);
 					$imagepath = str_replace('\\', '/', $imagepath);
 				} else {
 					// does not exist!!!
@@ -983,7 +993,7 @@ class Wiki2LaTeXParser {
 
 				//%%$title = $file->getTitle()->getText();
 				$graphic_package = 'graphicx';
-				$graphic_command = "\\begin{center} \\resizebox{".$imgwidth."}{!}{\includegraphics{{$imagepath}}}\\\\ \\textit{{$caption}}\end{center}\n";
+				$graphic_command = "\\begin{center} \\resizebox{".$imgwidth."}{!}{\includegraphics{{$imagepath}}}\\\\ \\textit{{$caption}}\\end{center}\n";
 				Hooks::run('w2lImage', array(&$this, &$file, &$graphic_package, &$graphic_command, &$imagepath, &$imagename, &$imgwith, &$caption));
 			
 				$this->addPackageDependency($graphic_package);
@@ -994,7 +1004,7 @@ class Wiki2LaTeXParser {
 			break;
 			case NS_CATEGORY:
 				// Namespace is a category, but a plain link to a cat-page is also matched here...
-				if ( $link_int{0} != ':' ) {
+				if ( substr($link_int, 0, 1) != ':' ) {
 					Hooks::run('w2lAddCategory', array(&$this, &$link_int) );
 					return '';
 				} // else: Fall through
@@ -1029,7 +1039,7 @@ class Wiki2LaTeXParser {
 	 * @private
 	 */
 	function replaceFreeExternalLinks( $text ) {
-		//global $wgContLang;
+		$_wgContLang = MediaWikiServices::getInstance()->getContentLanguage();
 		//$fname = 'Parser::replaceFreeExternalLinks';
 		//wfProfileIn( $fname );
 
@@ -1092,7 +1102,7 @@ class Wiki2LaTeXParser {
 
 					$text = $this->externalLinkHelper(array("[$url]", $url));
 					# Not an image, make a link
-					//$text = $sk->makeExternalLink( $url, $wgContLang->markNoConversion($url), true, 'free', $this->mTitle->getNamespace() );
+					//$text = $sk->makeExternalLink( $url, $_wgContLang->markNoConversion($url), true, 'free', $this->mTitle->getNamespace() );
 					# Register it in the output object...
 					# Replace unnecessary URL escape codes with their equivalent characters
 					//$pasteurized = Parser::replaceUnusualEscapes( $url );
@@ -2374,7 +2384,7 @@ class Wiki2LaTeXParser {
 		if ( array_key_exists($str, $this->mw_vars) )
 			return W2L_VARIABLE;
 
-		if ( '#' == $str{0} ) {
+		if ( '#' == substr($str, 0, 1) ) {
 			$pf = explode(':', $str, 2);
 			$pf = substr($pf[0], 1);
 			if ( array_key_exists($pf, $this->pFunctions) == true) {
@@ -2384,7 +2394,7 @@ class Wiki2LaTeXParser {
 			}
 			
 		}
-		if ( ':' == $str{0} )
+		if ( ':' == substr($str, 0, 1) )
 			return W2L_TRANSCLUSION;
 		
 		$test = explode(':', $str, 2);
@@ -2468,10 +2478,10 @@ class Wiki2LaTeXParser {
 			
 			// get value
 			$attr_value = '';
-			$fChar = $str{0};
+			$fChar = substr($str, 0, 1);
 			if ( $fChar == '=' ) 
 				$str = substr($str, 1);
-			$fChar=$str{0};
+			$fChar=substr($str, 0, 1);
 			
 			if ( $fChar == '"' ) {
 				// next to search for is "

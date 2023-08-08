@@ -44,10 +44,11 @@ class Wiki2LaTeXCompiler {
 	}
 	
 	function generateFiles($tpl_vars) {
-		global $wgOut, $wgUser;
+		global $wgOut;
+		$_wgUser = RequestContext::getMain()->getUser();
 		
-		$this->debug = $wgUser->getOption('w2lDebug');
-		$this->is_admin = in_array('sysop', $wgUser->getGroups());
+		$this->debug = $_wgUser->getOption('w2lDebug');
+		$this->is_admin = in_array('sysop', $_wgUser->getGroups());
 		
 		$msg = '';
 		$tempdir  = Wiki2LaTeXFunctions::w2lTempDir();
@@ -109,10 +110,10 @@ class Wiki2LaTeXCompiler {
 	
 	function runLaTeX( $file = 'Main', $sort = false, $bibtex = false ) {
 		
-		global $wgUser;
+		$_wgUser = RequestContext::getMain()->getUser();
 		$timer_start = microtime(true);
-		$this->debug = $wgUser->getOption('w2lDebug');
-		$this->is_admin = in_array('sysop', $wgUser->getGroups());
+		$this->debug = $_wgUser->getOption('w2lDebug');
+		$this->is_admin = in_array('sysop', $_wgUser->getGroups());
 		
 		$command = str_replace('%file%', $file, $this->command);
 

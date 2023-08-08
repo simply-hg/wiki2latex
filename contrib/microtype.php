@@ -33,8 +33,8 @@ function w2lMicrotypeHook( &$parser, &$text ) {
 }
 
 function w2lMicrotypeForm( &$core, &$output ) {
-	global $wgUser;
-	if ( $wgUser->getOption('w2lMicrotypeDefault') == true ) {
+	$_wgUser = RequestContext::getMain()->getUser();
+	if ( $_wgUser->getOption('w2lMicrotypeDefault') == true ) {
 		$output .= '<label><input type="checkbox" name="use_microtype" value="true" checked="checked" /> ';
 	} else {
 		$output .= '<label><input type="checkbox" name="use_microtype" value="true" /> ';

@@ -14,6 +14,8 @@
 	exit( 1 );
 }
 
+use MediaWiki\MediaWikiServices;
+
 /* Braucht:
 * Hook für Magic-Template
 * ParserExtensionTag: <index>, <printindex>
@@ -50,12 +52,11 @@ if ( !defined('MEDIAWIKI') )
 
 class w2lMakeidx {
 	static function Setup() {
-		global $wgParser;
 		// Register Extension-Tags to Mediawiki...
 		
 		// LaTeX-commands, which we want to offer to a wiki-article
-		$wgParser->setHook("index",      "w2lMakeidx::Index");
-		$wgParser->setHook("printindex", "w2lMakeidx::PrintIndex");
+		MediaWikiServices::getInstance()->getParser()->setHook("index",      "w2lMakeidx::Index");
+		MediaWikiServices::getInstance()->getParser()->setHook("printindex", "w2lMakeidx::PrintIndex");
 
 		// Some default ones
 		
